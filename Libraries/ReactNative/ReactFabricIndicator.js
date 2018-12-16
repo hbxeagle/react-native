@@ -15,6 +15,11 @@ const StyleSheet = require('StyleSheet');
 const Text = require('Text');
 const View = require('View');
 
+/**
+ * Summary: To make debugging/testing easier,
+ * optionally display fabric label on the top-right of
+ * the surface if it's rendered on fabric mode.
+ */
 function ReactFabricIndicator(): React.Node {
   return (
     <View style={styles.container}>

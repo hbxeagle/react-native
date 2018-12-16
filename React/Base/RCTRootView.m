@@ -236,6 +236,13 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
      * NOTE: Since the bridge persists, the RootViews might be reused, so the
      * react tag must be re-assigned every time a new UIManager is created.
      */
+    /**
+     * 创建的每个根视图都必须具有唯一的反应标记。
+     * 这些标签的编号分别为1,11,21,31等
+     *
+     * 注意：由于桥接器仍然存在，RootViews可能会被重用，所以
+     * 每次创建新的UIManager时都必须重新分配react标签。
+    */
     self.reactTag = RCTAllocateRootViewTag();
   }
   return super.reactTag;
@@ -290,6 +297,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)initWithCoder:(NSCoder *)aDecoder)
     @"initialProps": _appProperties ?: @{},
   };
 
+  // 执行 AppRegistry 的 runApplication 方法，moduleName 为对应js中注册的key，appParameters初始参数
   RCTLogInfo(@"Running application %@ (%@)", moduleName, appParameters);
   [bridge enqueueJSCall:@"AppRegistry"
                  method:@"runApplication"

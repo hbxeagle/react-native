@@ -18,6 +18,11 @@ const BABEL_ENABLED_PATHS = ['local-cli'];
  * transformation before being fed to Node.js. Notably, this is necessary to
  * support Flow type annotations.
  */
+/**
+ * 集中放置所有需要Babel转换的目录，
+ * 然后再送到Node.js.
+ * 值得注意的是，这对于支持Flow类型注释是必要的。
+ */
 function setupBabel() {
   babelRegisterOnly(
     babelRegisterOnly.buildRegExps(__dirname, BABEL_ENABLED_PATHS),

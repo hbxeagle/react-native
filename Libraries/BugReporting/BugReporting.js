@@ -31,6 +31,12 @@ function defaultExtras() {
  * that are currently visible on screen. Components should also remember to call `remove()` on the object that is
  * returned by `addSource` when they are unmounted.
  */
+/**
+ * 一个用于收集bug报告数据的简单类。
+ * 组件可以添加在通过`collectExtraData`创建bug报告时将查询的源。
+ * 例如，列表组件可能会添加一个源，该源提供当前在屏幕上可见的行列表。
+ * 组件还应该记得在卸载它们时对`addSource`返回的对象调用`remove（）`。
+ */
 class BugReporting {
   static _extraSources: Map<string, SourceCallback> = new Map();
   static _fileSources: Map<string, SourceCallback> = new Map();

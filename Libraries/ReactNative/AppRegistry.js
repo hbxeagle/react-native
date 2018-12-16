@@ -8,20 +8,30 @@
  * @format
  */
 'use strict';
-
+// 这个js文件仅仅是一个导入文件。导入了MessageQueue.js这个文件。
+// 这个文件是js端与Native通信的一个桥梁文件，里边有个计时器将要调用Native方法的事件放入一个queue中，
+// 当Native没有及时的在消息队列中调js的时候, 大于5ms后js就会调用这个回调, 主动调用Native
 const BatchedBridge = require('BatchedBridge');
+// 一个用于收集bug报告数据的简单类
 const BugReporting = require('BugReporting');
+// 实现了js调用Native代码。大家注意这个调用其实都是Native先调用js文件，
+// 执行js，在这时候传入适当的参数，然后实现了js调用Native方法哦。
 const NativeModules = require('NativeModules');
+// ReactNative 渲染程序
 const ReactNative = require('ReactNative');
+// 场景追踪器
 const SceneTracker = require('SceneTracker');
 
 const infoLog = require('infoLog');
+// 一种在开发中提供描述性错误，但在生产中提供一般错误的方法。
 const invariant = require('invariant');
+// 渲染应用，主要在上面加一些调试的功能等
 const renderApplication = require('renderApplication');
 
 type Task = (taskData: any) => Promise<void>;
 type TaskProvider = () => Task;
 export type ComponentProvider = () => React$ComponentType<any>;
+// 组件提供程序的工具钩子
 export type ComponentProviderInstrumentationHook = (
   component: ComponentProvider,
 ) => React$ComponentType<any>;
@@ -31,6 +41,7 @@ export type AppConfig = {
   run?: Function,
   section?: boolean,
 };
+//可运行状态
 export type Runnable = {
   component?: ComponentProvider,
   run: Function,
@@ -52,6 +63,11 @@ let componentProviderInstrumentationHook: ComponentProviderInstrumentationHook =
   component: ComponentProvider,
 ) => component();
 
+/**
+ * Summary: Changing AppContainer to render a wrapper component in it, if it exists.
+ * This wrapper is NOT a required property of AppContainer.
+ * Now, app-wide properties can be passed down via context to the container's children.
+ */
 let wrapperComponentProvider: ?WrapperComponentProvider;
 
 /**
@@ -64,6 +80,7 @@ const AppRegistry = {
     wrapperComponentProvider = provider;
   },
 
+  // 用来注册配置信息，可以理解为注册一组RNApp
   registerConfig(config: Array<AppConfig>): void {
     config.forEach(appConfig => {
       if (appConfig.run) {
@@ -89,6 +106,7 @@ const AppRegistry = {
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#registercomponent
    */
+  // 注册RNApp，js中非常重要的一步，只有这里注册了，native code中才会找到要执行的js。
   registerComponent(
     appKey: string,
     componentProvider: ComponentProvider,
@@ -111,12 +129,13 @@ const AppRegistry = {
     }
     return appKey;
   },
-
+  // 注册一个新的线程，通过第一个参数来区分，第二个参数是一个方法
   registerRunnable(appKey: string, run: Function): string {
     runnables[appKey] = {run};
     return appKey;
   },
 
+  // 注册一个切片
   registerSection(appKey: string, component: ComponentProvider): void {
     AppRegistry.registerComponent(appKey, component, true);
   },
@@ -135,6 +154,7 @@ const AppRegistry = {
     };
   },
 
+  // 获取注册的所有线程。其中包括第一步注册的Component和后面注册的Runable
   getRunnable(appKey: string): ?Runnable {
     return runnables[appKey];
   },
@@ -157,6 +177,7 @@ const AppRegistry = {
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#runapplication
    */
+  // 根据key来执行对应的应用（例如使用Runable注册的）。如果appKey不存在会报错。
   runApplication(appKey: string, appParameters: any): void {
     const msg =
       'Running application "' +
@@ -200,6 +221,7 @@ const AppRegistry = {
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#unmountapplicationcomponentatroottag
    */
+  // 结束应用，不传参数默认结束appKeys中的第一个
   unmountApplicationComponentAtRootTag(rootTag: number): void {
     ReactNative.unmountComponentAtNodeAndRemoveContainer(rootTag);
   },
@@ -209,6 +231,7 @@ const AppRegistry = {
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#registerheadlesstask
    */
+  // 创建一个任务，这个线程不支持UI。
   registerHeadlessTask(taskKey: string, task: TaskProvider): void {
     if (tasks.has(taskKey)) {
       console.warn(
@@ -223,6 +246,7 @@ const AppRegistry = {
    *
    * See http://facebook.github.io/react-native/docs/appregistry.html#startheadlesstask
    */
+  // 执行对应的任务。
   startHeadlessTask(taskId: number, taskKey: string, data: any): void {
     const taskProvider = tasks.get(taskKey);
     if (!taskProvider) {
