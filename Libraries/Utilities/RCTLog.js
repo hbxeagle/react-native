@@ -22,6 +22,8 @@ const levelsMap = {
 
 let warningHandler: ?(Array<any>) => void = null;
 
+console.log('RCTLog ----------');
+
 const RCTLog = {
   // level one of log, info, warn, error, mustfix
   logIfNoNativeHook(level: string, ...args: Array<any>): void {
@@ -51,5 +53,7 @@ const RCTLog = {
     warningHandler = handler;
   },
 };
+
+console.log('RCTLog++++++++++', RCTLog);
 
 module.exports = RCTLog;

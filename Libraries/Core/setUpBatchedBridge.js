@@ -23,7 +23,10 @@ BatchedBridge.registerLazyCallableModule('HeapCapture', () =>
 BatchedBridge.registerLazyCallableModule('SamplingProfiler', () =>
   require('SamplingProfiler'),
 );
-BatchedBridge.registerLazyCallableModule('RCTLog', () => require('RCTLog'));
+BatchedBridge.registerLazyCallableModule('RCTLog', () => {
+  console.log('RCTLog ========');
+  return require('RCTLog');
+});
 BatchedBridge.registerLazyCallableModule('RCTDeviceEventEmitter', () =>
   require('RCTDeviceEventEmitter'),
 );

@@ -24,31 +24,43 @@ export type SpyData = {
   args: any[],
 };
 
-const TO_JS = 0;
-const TO_NATIVE = 1;
+const TO_JS = 0; // 枚举值
+const TO_NATIVE = 1; // 枚举值
 
-const MODULE_IDS = 0;
-const METHOD_IDS = 1;
-const PARAMS = 2;
-const MIN_TIME_BETWEEN_FLUSHES_MS = 5;
+const MODULE_IDS = 0; // 枚举值
+const METHOD_IDS = 1; // 枚举值
+const PARAMS = 2; // 枚举值
+const MIN_TIME_BETWEEN_FLUSHES_MS = 5; // 两次队列刷新之间的最小间隔 5 毫秒
 
 // eslint-disable-next-line no-bitwise
-const TRACE_TAG_REACT_APPS = 1 << 17;
+const TRACE_TAG_REACT_APPS = 1 << 17; // 131072
 
 const DEBUG_INFO_LIMIT = 32;
 
 class MessageQueue {
+  // 可懒回调的模块，在调用 getCallableModule 时，才加载模块
   _lazyCallableModules: {[key: string]: (void) => Object};
+  // 消息队列
+  // MODULE_IDS 队列 | METHOD_IDS 队列 | PARAMS 队列 | 当前调用id
   _queue: [number[], number[], any[], number];
+  // 成功回调
   _successCallbacks: {[key: number]: ?Function};
+  // 失败回调
   _failureCallbacks: {[key: number]: ?Function};
-  _callID: number;
+  // 当前调用id
+  _callID: number; // 
+  // 最后刷新时间
   _lastFlush: number;
+  // 时间循环开启时间
   _eventLoopStartTime: number;
+  // 立即回调
   _immediatesCallback: ?() => void;
 
+  // 调试信息
   _debugInfo: {[number]: [number, number]};
+  // 远程模块表
   _remoteModuleTable: {[number]: string};
+  // 远程方法表
   _remoteMethodTable: {[number]: string[]};
 
   __spy: ?(data: SpyData) => void;
@@ -84,7 +96,7 @@ class MessageQueue {
   /**
    * Public APIs
    */
-
+  // 开启Native与JS之间通讯的监控
   static spy(spyOrToggle: boolean | ((data: SpyData) => void)) {
     if (spyOrToggle === true) {
       MessageQueue.prototype.__spy = info => {
@@ -100,20 +112,43 @@ class MessageQueue {
       MessageQueue.prototype.__spy = spyOrToggle;
     }
   }
-
+  // 调用函数，并返回刷新后的队列
   callFunctionReturnFlushedQueue(module: string, method: string, args: any[]) {
+    console.log(
+      'MessageQueue',
+      'callFunctionReturnFlushedQueue',
+      'module:',
+      module,
+      'method:',
+      method,
+      'args:',
+      args,
+      '_callID',
+      this._callID,
+      'queue',
+      this._queue,
+    );
     this.__guard(() => {
       this.__callFunction(module, method, args);
     });
-
     return this.flushedQueue();
   }
-
+  // 调用函数，并返回调用结果和刷新厚度队列
   callFunctionReturnResultAndFlushedQueue(
     module: string,
     method: string,
     args: any[],
   ) {
+    console.log(
+      'MessageQueue',
+      'callFunctionReturnResultAndFlushedQueue',
+      'module:',
+      module,
+      'method:',
+      method,
+      'args:',
+      args,
+    );
     let result;
     this.__guard(() => {
       result = this.__callFunction(module, method, args);
@@ -121,34 +156,62 @@ class MessageQueue {
 
     return [result, this.flushedQueue()];
   }
-
+  // 激活回调，并返回刷新后的队列
   invokeCallbackAndReturnFlushedQueue(cbID: number, args: any[]) {
+    console.log(
+      'MessageQueue',
+      'invokeCallbackAndReturnFlushedQueue',
+      'cbID:',
+      cbID,
+      'args:',
+      args,
+    );
     this.__guard(() => {
       this.__invokeCallback(cbID, args);
     });
-
     return this.flushedQueue();
   }
 
   flushedQueue() {
+    console.log('MessageQueue', 'flushedQueue', 'queue:', this._queue);
     this.__guard(() => {
+      // 调用需要立即执行的回调
       this.__callImmediates();
     });
 
     const queue = this._queue;
+    // 重置消息队列
     this._queue = [[], [], [], this._callID];
+    // 返回执行后的队列
     return queue[0].length ? queue : null;
   }
 
   getEventLoopRunningTime() {
+    console.log('MessageQueue', 'getEventLoopRunningTime');
     return Date.now() - this._eventLoopStartTime;
   }
 
   registerCallableModule(name: string, module: Object) {
+    console.log(
+      'MessageQueue',
+      'registerCallableModule',
+      'name:',
+      name,
+      'module:',
+      module,
+    );
     this._lazyCallableModules[name] = () => module;
   }
 
   registerLazyCallableModule(name: string, factory: void => Object) {
+    console.log(
+      'MessageQueue',
+      'registerLazyCallableModule',
+      'name:',
+      name,
+      'factory:',
+      factory,
+    );
     let module: Object;
     let getValue: ?(void) => Object = factory;
     this._lazyCallableModules[name] = () => {
@@ -161,10 +224,12 @@ class MessageQueue {
   }
 
   getCallableModule(name: string) {
+    console.log('MessageQueue', 'getCallableModule', 'name:', name);
     const getValue = this._lazyCallableModules[name];
     return getValue ? getValue() : null;
   }
 
+  // 入队 Native 的调用
   enqueueNativeCall(
     moduleID: number,
     methodID: number,
@@ -172,6 +237,20 @@ class MessageQueue {
     onFail: ?Function,
     onSucc: ?Function,
   ) {
+    console.log(
+      'MessageQueue',
+      'enqueueNativeCall',
+      'moduleID:',
+      moduleID,
+      'methodID:',
+      methodID,
+      'params:',
+      params,
+      'onFail:',
+      onFail,
+      'onSucc:',
+      onSucc,
+    );
     if (onFail || onSucc) {
       if (__DEV__) {
         this._debugInfo[this._callID] = [moduleID, methodID];
@@ -181,6 +260,7 @@ class MessageQueue {
       }
       // Encode callIDs into pairs of callback identifiers by shifting left and using the rightmost bit
       // to indicate fail (0) or success (1)
+      // 通过左移，并使用最右边的位，将callID编码为成一对回调标识符，用于标记失败或成功
       // eslint-disable-next-line no-bitwise
       onFail && params.push(this._callID << 1);
       // eslint-disable-next-line no-bitwise
@@ -299,6 +379,7 @@ class MessageQueue {
   // between modules is introduced. Note that only one callback may be
   // registered at a time.
   setImmediatesCallback(fn: () => void) {
+    console.log('MessageQueue', 'setImmediatesCallback', 'fn:', fn);
     this._immediatesCallback = fn;
   }
 
@@ -340,7 +421,9 @@ class MessageQueue {
   }
 
   __callFunction(module: string, method: string, args: any[]): any {
+    // 更新最新刷新时间
     this._lastFlush = Date.now();
+    // 更新事件循环开始事件
     this._eventLoopStartTime = this._lastFlush;
     if (__DEV__ || this.__spy) {
       Systrace.beginEvent(`${module}.${method}(${stringifySafe(args)})`);
@@ -350,6 +433,8 @@ class MessageQueue {
     if (this.__spy) {
       this.__spy({type: TO_JS, module, method, args});
     }
+
+    // **重要** 获取到对应的模块
     const moduleMethods = this.getCallableModule(module);
     invariant(
       !!moduleMethods,
@@ -363,6 +448,8 @@ class MessageQueue {
       method,
       module,
     );
+
+    // **重要** 执行具体模块的函数
     const result = moduleMethods[method].apply(moduleMethods, args);
     Systrace.endEvent();
     return result;

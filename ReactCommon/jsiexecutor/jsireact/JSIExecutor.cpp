@@ -281,6 +281,8 @@ bool JSIExecutor::isInspectable() {
 void JSIExecutor::bindBridge() {
   std::call_once(bindFlag_, [this] {
     SystraceSection s("JSIExecutor::bindBridge (once)");
+    
+    // 获取到 js 中暴露到全局的 MessageQueue
     Value batchedBridgeValue =
         runtime_->global().getProperty(*runtime_, "__fbBatchedBridge");
     if (batchedBridgeValue.isUndefined()) {

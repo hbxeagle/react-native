@@ -381,6 +381,7 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 
 - (void)enqueueJSCall:(NSString *)module method:(NSString *)method args:(NSArray *)args completion:(dispatch_block_t)completion
 {
+  // batchedBridge 在 setup 中初始化 RCTCxxBridge的一个实例
   [self.batchedBridge enqueueJSCall:module method:method args:args completion:completion];
 }
 

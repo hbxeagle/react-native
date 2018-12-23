@@ -22,6 +22,8 @@ const RNTesterList = require('./RNTesterList.ios');
 const RNTesterNavigationReducer = require('./RNTesterNavigationReducer');
 const URIActionMap = require('./URIActionMap');
 
+const MessageQueue = require('react-native/Libraries/BatchedBridge/MessageQueue');
+
 const {
   Button,
   AppRegistry,
@@ -31,6 +33,8 @@ const {
   View,
   SafeAreaView,
 } = ReactNative;
+
+// MessageQueue.spy(true);
 
 import type {RNTesterExample} from './RNTesterList.ios';
 import type {RNTesterAction} from './RNTesterActions';
