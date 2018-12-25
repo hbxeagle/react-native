@@ -219,6 +219,7 @@ void JSIExecutor::callFunction(
   try {
     scopedTimeoutInvoker_(
         [&] {
+          // callFunctionReturnFlushedQueue_ 在 bindBridge 中初始化为 js 的 callFunctionReturnFlushedQueue 的引用
           ret = callFunctionReturnFlushedQueue_->call(
               *runtime_,
               moduleId,
@@ -230,7 +231,7 @@ void JSIExecutor::callFunction(
     std::throw_with_nested(
         std::runtime_error("Error calling " + moduleId + "." + methodId));
   }
-
+  // 根据 callFunctionReturnFlushedQueue 返回的js call native队列，执行native的程序
   callNativeModules(ret, true);
 }
 

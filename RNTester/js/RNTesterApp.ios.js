@@ -34,7 +34,7 @@ const {
   SafeAreaView,
 } = ReactNative;
 
-// MessageQueue.spy(true);
+MessageQueue.spy(true);
 
 import type {RNTesterExample} from './RNTesterList.ios';
 import type {RNTesterAction} from './RNTesterActions';
